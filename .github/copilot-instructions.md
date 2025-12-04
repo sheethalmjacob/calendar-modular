@@ -162,6 +162,7 @@ See `DECISIONS.md` for the 4-phase rollout plan:
 - Visual count: "Showing 5 of 12 classes"
 
 ### When Building Calendar View
+- **Design reference**: See `docs/design/FigmaCalendar.png` for visual layout
 - Display two block types with visual distinction:
   - **Fixed blocks** (PDF classes): Locked position, striped pattern or lock icon
   - **Flexible blocks** (personal events): Solid fill, draggable
@@ -193,6 +194,7 @@ See `DECISIONS.md` for the 4-phase rollout plan:
 ### Key Files to Reference
 - `README.md`: Original product requirements and feature ideas
 - `DECISIONS.md`: Technical specifications and implementation decisions
+- `docs/design/FigmaCalendar.png`: Visual design reference for calendar interface
 
 ## User's Development Environment
 

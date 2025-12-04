@@ -931,6 +931,8 @@ export function ClassCatalog() {
 
 **What you're building:** A calendar displaying two types of blocks—fixed (PDF classes) and flexible (personal events)—with different behaviors.
 
+**Design Reference:** See `docs/design/FigmaCalendar.png` for visual layout mockup.
+
 **Create the Calendar page:**
 File: `src/pages/Calendar.tsx`
 ```typescript
