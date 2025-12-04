@@ -3,6 +3,8 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { Login } from './pages/Login'
 import { Signup } from './pages/Signup'
 import { Calendar } from './pages/Calendar'
+import { PDFUpload } from './pages/PDFUpload'
+import { ClassCatalog } from './pages/ClassCatalog'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -26,6 +28,22 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route
+            path="/upload"
+            element={
+              <ProtectedRoute>
+                <PDFUpload />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/catalog"
+            element={
+              <ProtectedRoute>
+                <ClassCatalog />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/calendar"
             element={
               <ProtectedRoute>
@@ -33,7 +51,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/calendar" />} />
+          <Route path="/" element={<Navigate to="/upload" />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
