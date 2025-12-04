@@ -198,10 +198,10 @@ export function Calendar() {
   };
 
   const CustomEvent = ({ event }: { event: ClassEvent }) => (
-    <div className="p-1">
-      <div className="font-semibold text-sm">{event.title}</div>
+    <div className="p-2 h-full">
+      <div className="font-semibold text-sm leading-tight">{event.title}</div>
       {event.resource.location && (
-        <div className="text-xs">{event.resource.location}</div>
+        <div className="text-xs opacity-90 mt-1">{event.resource.location}</div>
       )}
     </div>
   );
@@ -285,35 +285,35 @@ export function Calendar() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-[#F5F1E8] p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold mb-2">My Schedule</h1>
-            <p className="text-gray-600">
-              {events.length} class(es) scheduled • {user?.email}
+            <h1 className="text-4xl font-bold text-gray-900 mb-1">My Schedule</h1>
+            <p className="text-gray-600 text-sm">
+              {events.length} {events.length === 1 ? 'event' : 'events'} • {user?.email}
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/upload')}>
+            <Button variant="outline" onClick={() => navigate('/upload')} className="bg-white border-gray-300">
               Upload PDF
             </Button>
-            <Button variant="outline" onClick={() => navigate('/add-event')}>
+            <Button variant="outline" onClick={() => navigate('/add-event')} className="bg-white border-gray-300">
               Add Event
             </Button>
-            <Button variant="outline" onClick={() => navigate('/manual')}>
+            <Button variant="outline" onClick={() => navigate('/manual')} className="bg-white border-gray-300">
               Add Classes
             </Button>
-            <Button variant="outline" onClick={() => navigate('/catalog')}>
+            <Button variant="outline" onClick={() => navigate('/catalog')} className="bg-white border-gray-300">
               Manage Classes
             </Button>
-            <Button variant="outline" onClick={signOut}>
+            <Button variant="destructive" onClick={signOut}>
               Sign Out
             </Button>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4" style={{ height: '700px' }}>
+        <div className="bg-white rounded-xl border border-gray-200 p-6" style={{ height: '700px' }}>
           <DragAndDropCalendar
             localizer={localizer}
             events={events}
@@ -340,34 +340,34 @@ export function Calendar() {
           />
         </div>
 
-        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-          <h3 className="font-semibold mb-2">Legend</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="mt-6 p-5 bg-white rounded-xl border border-gray-200">
+          <h3 className="font-semibold text-gray-900 mb-3 text-sm">Event Types</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-500 rounded" style={{
-                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.1) 10px, rgba(255,255,255,.1) 20px)'
+              <div className="w-5 h-5 bg-blue-400 rounded" style={{
+                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(255,255,255,.25) 8px, rgba(255,255,255,.25) 16px)'
               }}></div>
-              <span className="text-sm">Fixed Classes</span>
+              <span className="text-sm text-gray-700">Fixed Classes</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#10b981' }}></div>
-              <span className="text-sm">Personal</span>
+              <div className="w-5 h-5 rounded" style={{ backgroundColor: '#10b981' }}></div>
+              <span className="text-sm text-gray-700">Personal</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
-              <span className="text-sm">Work</span>
+              <div className="w-5 h-5 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
+              <span className="text-sm text-gray-700">Work</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#8b5cf6' }}></div>
-              <span className="text-sm">Study</span>
+              <div className="w-5 h-5 rounded" style={{ backgroundColor: '#8b5cf6' }}></div>
+              <span className="text-sm text-gray-700">Study</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }}></div>
-              <span className="text-sm">Gym/Exercise</span>
+              <div className="w-5 h-5 rounded" style={{ backgroundColor: '#ef4444' }}></div>
+              <span className="text-sm text-gray-700">Gym/Exercise</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ec4899' }}></div>
-              <span className="text-sm">Social</span>
+              <div className="w-5 h-5 rounded" style={{ backgroundColor: '#ec4899' }}></div>
+              <span className="text-sm text-gray-700">Social</span>
             </div>
           </div>
         </div>

@@ -60,21 +60,21 @@ export async function processPDF(file: File, userId: string): Promise<ExtractedC
     }
     
     // Step 2: Create the prompt for class schedule extraction
-    const userPrompt = `Analyze this text from a class schedule PDF and extract ALL class sections:
+    const userPrompt = `Extract class schedule information from this text as a JSON array.
 
 ${pdfText}
 
-Return a JSON array where each object has:
-- course_name: Full course name
-- course_code: Course code (e.g., "CS101")
-- section: Section number
-- instructor: Professor name
-- location: Room/building
-- days: Array of days ["M", "T", "W", "R", "F", "S", "U"]
-- start_time: 24-hour format (e.g., "09:00")
-- end_time: 24-hour format (e.g., "10:15")
+Each object must have:
+- course_name (string)
+- course_code (string or null)
+- section (string or null)
+- instructor (string or null)
+- location (string or null)
+- days (array: ["M","T","W","R","F","S","U"])
+- start_time (24h format: "09:00")
+- end_time (24h format: "10:15")
 
-Use null for missing fields. Return ONLY the JSON array, no other text.`;
+Return ONLY valid JSON array, no explanation.`;
 
     // Step 3: Call Gemini API
     console.log('Sending to Gemini API...');
@@ -83,7 +83,7 @@ Use null for missing fields. Return ONLY the JSON array, no other text.`;
     const timeoutId = setTimeout(() => controller.abort(), 60000);
     
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${API_KEY}`,
       {
         method: 'POST',
         headers: {
@@ -99,7 +99,7 @@ Use null for missing fields. Return ONLY the JSON array, no other text.`;
             temperature: 0.1,
             topK: 1,
             topP: 1,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 32768,
           }
         }),
         signal: controller.signal
@@ -115,10 +115,13 @@ Use null for missing fields. Return ONLY the JSON array, no other text.`;
     }
 
     const result = await response.json();
+    console.log('Full Gemini API response:', JSON.stringify(result, null, 2));
+    
     const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!text) {
-      throw new Error('No response from Gemini API');
+      console.error('No text in response. Full result:', result);
+      throw new Error('No response from Gemini API. Check console for details.');
     }
 
     console.log('Gemini response:', text);
