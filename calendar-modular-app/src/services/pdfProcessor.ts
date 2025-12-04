@@ -40,7 +40,7 @@ async function extractTextFromPDF(file: File): Promise<string> {
 }
 
 /**
- * Process a PDF file and extract class schedule information using OpenAI
+ * Process a PDF file and extract class schedule information using Google Gemini
  */
 export async function processPDF(file: File, userId: string): Promise<ExtractedClass[]> {
   try {
@@ -53,10 +53,10 @@ export async function processPDF(file: File, userId: string): Promise<ExtractedC
       throw new Error('Could not extract text from PDF. The PDF might be image-based or corrupted.');
     }
     
-    const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+    const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
     
     if (!API_KEY) {
-      throw new Error('OpenAI API key not configured. Please add VITE_OPENAI_API_KEY to your .env.local file.');
+      throw new Error('Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your environment variables.');
     }
     
     // Step 2: Create the prompt for class schedule extraction
@@ -76,34 +76,31 @@ Return a JSON array where each object has:
 
 Use null for missing fields. Return ONLY the JSON array, no other text.`;
 
-    // Step 3: Call OpenAI API
-    console.log('Sending to OpenAI API...');
+    // Step 3: Call Gemini API
+    console.log('Sending to Gemini API...');
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
     
     const response = await fetch(
-      'https://api.openai.com/v1/chat/completions',
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a helpful assistant that extracts class schedule information from text and returns it as JSON.'
-            },
-            {
-              role: 'user',
-              content: userPrompt
-            }
-          ],
-          temperature: 0.1,
-          response_format: { type: 'json_object' }
+          contents: [{
+            parts: [{
+              text: userPrompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            topK: 1,
+            topP: 1,
+            maxOutputTokens: 2048,
+          }
         }),
         signal: controller.signal
       }
@@ -113,27 +110,27 @@ Use null for missing fields. Return ONLY the JSON array, no other text.`;
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('OpenAI API error:', errorData);
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+      console.error('Gemini API error:', errorData);
+      throw new Error(`Gemini API error: ${errorData.error?.message || 'Unknown error'}`);
     }
 
     const result = await response.json();
-    const text = result.choices?.[0]?.message?.content;
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
     
     if (!text) {
-      throw new Error('No response from OpenAI API');
+      throw new Error('No response from Gemini API');
     }
 
-    console.log('OpenAI response:', text);
+    console.log('Gemini response:', text);
     
     // Parse the JSON response
     let extractedClasses: ExtractedClass[];
     try {
-      const parsed = JSON.parse(text);
-      // Handle both direct array and object with classes property
-      extractedClasses = Array.isArray(parsed) ? parsed : (parsed.classes || []);
+      // Remove markdown code blocks if present
+      const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      extractedClasses = JSON.parse(cleanedText);
     } catch (parseError) {
-      console.error('Failed to parse OpenAI response:', text);
+      console.error('Failed to parse Gemini response:', text);
       throw new Error('Failed to parse AI response. Please ensure the PDF contains a valid class schedule.');
     }
 
