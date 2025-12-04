@@ -5,6 +5,7 @@ import { Signup } from './pages/Signup'
 import { Calendar } from './pages/Calendar'
 import { PDFUpload } from './pages/PDFUpload'
 import { ClassCatalog } from './pages/ClassCatalog'
+import { ManualEntry } from './pages/ManualEntry'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -36,6 +37,14 @@ function App() {
             }
           />
           <Route
+            path="/manual"
+            element={
+              <ProtectedRoute>
+                <ManualEntry />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/catalog"
             element={
               <ProtectedRoute>
@@ -51,7 +60,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/upload" />} />
+          <Route path="/" element={<Navigate to="/manual" />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

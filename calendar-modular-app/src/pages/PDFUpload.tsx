@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Upload, FileText, Loader2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { processPDF } from '@/services/pdfProcessor'
 
 export function PDFUpload() {
   const [uploading, setUploading] = useState(false)
@@ -29,6 +30,7 @@ export function PDFUpload() {
 
     try {
       setUploading(true)
+      setProcessing(true)
       setError('')
 
       // 1. Upload PDF to Supabase Storage
@@ -49,7 +51,7 @@ export function PDFUpload() {
           file_name: selectedFile.name,
           file_path: fileName,
           file_size: selectedFile.size,
-          processing_status: 'pending'
+          processing_status: 'processing'
         })
         .select()
         .single()
@@ -57,58 +59,35 @@ export function PDFUpload() {
       if (dbError) throw dbError
 
       // 3. Process the PDF with Google Gemini
-      setUploading(false)
-      setProcessing(true)
-      
-      await processPDFWithGemini(fileName, uploadRecord.id)
+      const extractedClasses = await processPDF(selectedFile, user.id)
 
-      // 4. Navigate to class catalog
-      navigate('/catalog')
-
-    } catch (err: any) {
-      setError(err.message || 'Failed to upload PDF')
-      setUploading(false)
-      setProcessing(false)
-    }
-  }
-
-  const processPDFWithGemini = async (filePath: string, uploadId: string) => {
-    try {
-      // Get the file URL
-      const { data } = supabase.storage
-        .from('pdf-uploads')
-        .getPublicUrl(filePath)
-
-      // Call our backend API to process with Gemini
-      const response = await fetch('/api/process-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          fileUrl: data.publicUrl,
-          uploadId,
-          userId: user?.id
-        })
-      })
-
-      if (!response.ok) throw new Error('Failed to process PDF')
-
-      // Update status
-      await supabase
-        .from('pdf_uploads')
-        .update({ processing_status: 'completed' })
-        .eq('id', uploadId)
-
-    } catch (err: any) {
-      // Update status to failed
+      // 4. Update upload status
       await supabase
         .from('pdf_uploads')
         .update({ 
-          processing_status: 'failed',
-          error_message: err.message 
+          processing_status: 'completed',
+          extracted_count: extractedClasses.length 
         })
-        .eq('id', uploadId)
+        .eq('id', uploadRecord.id)
+
+      // 5. Navigate to class catalog
+      navigate('/catalog')
+
+    } catch (err: any) {
+      setError(err.message || 'Failed to process PDF')
       
-      throw err
+      // Update status to failed if we have an upload record
+      if (user) {
+        await supabase
+          .from('pdf_uploads')
+          .update({ processing_status: 'failed' })
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+      }
+    } finally {
+      setUploading(false)
+      setProcessing(false)
     }
   }
 
