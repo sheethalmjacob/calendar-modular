@@ -163,9 +163,15 @@ See `DECISIONS.md` for the 4-phase rollout plan:
 
 ### When Building Calendar View
 - **Design reference**: See `docs/design/FigmaCalendar.png` for visual layout
+- **UI specifications**: See `docs/UIdesign.md` for complete styling requirements:
+  - Background color: #F3F0E9 (warm beige)
+  - Event card colors: Lavender (#D8B2D9) for classes, Yellow (#EEDC5B) for personal
+  - Border radius: 16-20px for event cards
+  - Typography: Time (14-16px bold), Course name (14px medium), Location (12-13px with pin icon)
+  - Spacing: 16px internal padding, 8-12px between cards
 - Display two block types with visual distinction:
-  - **Fixed blocks** (PDF classes): Locked position, striped pattern or lock icon
-  - **Flexible blocks** (personal events): Solid fill, draggable
+  - **Fixed blocks** (PDF classes): Locked position, lavender background
+  - **Flexible blocks** (personal events): Draggable, yellow/category-colored background
 - Only flexible blocks can be dragged/resized
 - Fixed blocks display course code, time, location on hover/click
 - Overlap warnings shown as red outline
@@ -194,7 +200,9 @@ See `DECISIONS.md` for the 4-phase rollout plan:
 ### Key Files to Reference
 - `README.md`: Original product requirements and feature ideas
 - `DECISIONS.md`: Technical specifications and implementation decisions
+- `docs/UIdesign.md`: **Comprehensive UI/UX design specifications** (colors, typography, spacing, component styling, interaction behaviors)
 - `docs/design/FigmaCalendar.png`: Visual design reference for calendar interface
+- Figma Live Design: https://shrug-many-16932283.figma.site
 
 ## User's Development Environment
 

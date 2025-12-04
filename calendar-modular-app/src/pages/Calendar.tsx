@@ -186,7 +186,7 @@ export function Calendar() {
 
   const eventStyleGetter = (event: ClassEvent) => {
     const categoryColors: { [key: string]: string } = {
-      personal: '#10b981',
+      personal: '#EEDC5B',
       work: '#f59e0b',
       study: '#8b5cf6',
       gym: '#ef4444',
@@ -194,20 +194,20 @@ export function Calendar() {
     };
 
     const backgroundColor = event.resource.is_fixed 
-      ? '#3b82f6' 
-      : (event.resource.category ? categoryColors[event.resource.category] : '#10b981');
+      ? '#D8B2D9' 
+      : (event.resource.category ? categoryColors[event.resource.category] : '#EEDC5B');
 
     // Check for overlaps
     const hasOverlap = getOverlappingEvents(event).length > 0;
 
     const style: React.CSSProperties = {
       backgroundColor,
-      borderRadius: '5px',
-      opacity: 0.8,
-      color: 'white',
+      borderRadius: '16px',
+      opacity: 0.95,
+      color: '#000',
       border: hasOverlap ? '3px solid #ef4444' : '0px',
       display: 'block',
-      boxShadow: hasOverlap ? '0 0 0 2px #fee2e2, 0 0 10px rgba(239, 68, 68, 0.3)' : 'none',
+      boxShadow: hasOverlap ? '0 0 0 2px #fee2e2, 0 0 10px rgba(239, 68, 68, 0.3)' : '0 2px 4px rgba(0, 0, 0, 0.1)',
     };
 
     if (event.resource.is_fixed) {
@@ -219,15 +219,25 @@ export function Calendar() {
 
   const CustomEvent = ({ event }: { event: ClassEvent }) => {
     const hasOverlap = getOverlappingEvents(event).length > 0;
+    const timeFormat = 'h:mm a';
     
     return (
-      <div className="p-2 h-full">
-        <div className="font-semibold text-sm leading-tight flex items-center gap-1">
-          {hasOverlap && <span className="text-red-200">⚠️</span>}
+      <div className="h-full" style={{ padding: '16px' }}>
+        <div className="font-bold leading-tight" style={{ fontSize: '14px', marginBottom: '4px' }}>
+          {format(event.start, timeFormat)} - {format(event.end, timeFormat)}
+        </div>
+        <div className="font-medium leading-tight flex items-center gap-1" style={{ fontSize: '14px', marginBottom: '4px' }}>
+          {hasOverlap && <span className="text-red-600">⚠️</span>}
           {event.title}
         </div>
         {event.resource.location && (
-          <div className="text-xs opacity-90 mt-1">{event.resource.location}</div>
+          <div className="flex items-center gap-1 opacity-90" style={{ fontSize: '12px' }}>
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {event.resource.location}
+          </div>
         )}
       </div>
     );
@@ -326,12 +336,12 @@ export function Calendar() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F1E8] p-6">
+    <div className="min-h-screen bg-[#F3F0E9] p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-1">My Schedule</h1>
-            <p className="text-gray-600 text-sm">
+            <h1 className="text-5xl font-bold text-gray-900 mb-2">Class Schedule Manager</h1>
+            <p className="text-gray-600 text-base" style={{ color: '#646464', lineHeight: '1.5' }}>
               {events.length} {events.length === 1 ? 'event' : 'events'} • {user?.email}
             </p>
           </div>
@@ -414,34 +424,34 @@ export function Calendar() {
         <div className="mt-6 p-5 bg-white rounded-xl border border-gray-200">
           <h3 className="font-semibold text-gray-900 mb-3 text-sm">Event Types</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 bg-blue-400 rounded" style={{
-                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(255,255,255,.25) 8px, rgba(255,255,255,.25) 16px)'
+            <div className="flex items-center" style={{ gap: '8px' }}>
+              <div className="w-5 h-5 rounded-full" style={{
+                backgroundColor: '#D8B2D9'
               }}></div>
-              <span className="text-sm text-gray-700">Fixed Classes</span>
+              <span className="text-sm text-gray-700">Class</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded" style={{ backgroundColor: '#10b981' }}></div>
+            <div className="flex items-center" style={{ gap: '8px' }}>
+              <div className="w-5 h-5 rounded-full" style={{ backgroundColor: '#EEDC5B' }}></div>
               <span className="text-sm text-gray-700">Personal</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
+            <div className="flex items-center" style={{ gap: '8px' }}>
+              <div className="w-5 h-5 rounded-full" style={{ backgroundColor: '#f59e0b' }}></div>
               <span className="text-sm text-gray-700">Work</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded" style={{ backgroundColor: '#8b5cf6' }}></div>
+            <div className="flex items-center" style={{ gap: '8px' }}>
+              <div className="w-5 h-5 rounded-full" style={{ backgroundColor: '#8b5cf6' }}></div>
               <span className="text-sm text-gray-700">Study</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded" style={{ backgroundColor: '#ef4444' }}></div>
+            <div className="flex items-center" style={{ gap: '8px' }}>
+              <div className="w-5 h-5 rounded-full" style={{ backgroundColor: '#ef4444' }}></div>
               <span className="text-sm text-gray-700">Gym/Exercise</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded" style={{ backgroundColor: '#ec4899' }}></div>
+            <div className="flex items-center" style={{ gap: '8px' }}>
+              <div className="w-5 h-5 rounded-full" style={{ backgroundColor: '#ec4899' }}></div>
               <span className="text-sm text-gray-700">Social</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded border-4 border-red-500" style={{ backgroundColor: '#10b981' }}></div>
+            <div className="flex items-center" style={{ gap: '8px' }}>
+              <div className="w-5 h-5 rounded-full border-4 border-red-500" style={{ backgroundColor: '#EEDC5B' }}></div>
               <span className="text-sm text-gray-700">⚠️ Time Conflict</span>
             </div>
           </div>

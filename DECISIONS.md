@@ -43,6 +43,14 @@
   - Microsoft Outlook
   - Apple Calendar
 
+### UI/UX Design
+- **Design Specifications:** See `docs/UIdesign.md` for comprehensive UI/UX guidelines
+  - Color scheme, typography, spacing, and layout specifications
+  - Component styling (buttons, event cards, calendar grid)
+  - Interaction behaviors and responsive breakpoints
+- **Visual Reference:** `docs/design/FigmaCalendar.png` for design mockup
+- **Live Design:** https://shrug-many-16932283.figma.site
+
 ## Feature Specifications
 
 ### PDF Upload & Class Extraction (PRIMARY FEATURE)
