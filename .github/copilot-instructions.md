@@ -109,3 +109,5 @@ See `DECISIONS.md` for the 4-phase rollout plan:
 - Structure responses as **step-by-step instructions** (e.g., "Step 1: Create file X", "Step 2: Run command Y")
 - When errors occur, explain in plain language what went wrong and how to fix it
 - Avoid jargon - use analogies and everyday language to explain technical concepts
+- **Follow SDLC** with conventional commits
+- **Commit often** - make frequent, small commits to track progress
