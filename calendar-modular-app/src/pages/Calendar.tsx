@@ -295,6 +295,9 @@ export function Calendar() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/upload')}>
+              Upload PDF
+            </Button>
             <Button variant="outline" onClick={() => navigate('/add-event')}>
               Add Event
             </Button>
