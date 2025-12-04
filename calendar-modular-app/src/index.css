@@ -74,4 +74,138 @@
   }
 }
 
+/* React Big Calendar Custom Styling */
+.rbc-calendar {
+  font-family: system-ui, -apple-system, sans-serif;
+  height: 100%;
+}
+
+.rbc-header {
+  padding: 12px 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #1e293b;
+  background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.rbc-today {
+  background-color: #eff6ff;
+}
+
+.rbc-time-slot {
+  border-top: 1px solid #f1f5f9;
+}
+
+.rbc-current-time-indicator {
+  background-color: #ef4444;
+  height: 2px;
+}
+
+.rbc-event {
+  border-radius: 6px;
+  padding: 4px 8px;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.rbc-event:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.rbc-event.rbc-selected {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+}
+
+.rbc-time-header-content {
+  border-left: 1px solid #e2e8f0;
+}
+
+.rbc-time-content {
+  border-top: 2px solid #e2e8f0;
+}
+
+.rbc-day-slot .rbc-time-slot {
+  border-top: 1px solid #f1f5f9;
+}
+
+.rbc-timeslot-group {
+  min-height: 60px;
+  border-left: 1px solid #e2e8f0;
+}
+
+.rbc-time-gutter {
+  background: #fafafa;
+}
+
+.rbc-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  padding: 0 8px;
+}
+
+.rbc-toolbar {
+  padding: 12px 0;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rbc-toolbar button {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rbc-toolbar button:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.rbc-toolbar button.rbc-active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.rbc-toolbar button.rbc-active:hover {
+  background: #2563eb;
+}
+
+.rbc-toolbar-label {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Dragging styles */
+.rbc-addons-dnd-dragging .rbc-event {
+  opacity: 0.6;
+  cursor: move;
+}
+
+.rbc-addons-dnd-resizable {
+  position: relative;
+}
+
+.rbc-addons-dnd-resize-anchor {
+  position: absolute;
+  width: 100%;
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.rbc-addons-dnd-resize-anchor:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 

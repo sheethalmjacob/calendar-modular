@@ -198,10 +198,13 @@ export function Calendar() {
   };
 
   const CustomEvent = ({ event }: { event: ClassEvent }) => (
-    <div className="p-1">
-      <div className="font-semibold text-sm">{event.title}</div>
+    <div className="p-2 h-full flex flex-col">
+      <div className="font-semibold text-sm leading-tight mb-1">{event.title}</div>
       {event.resource.location && (
-        <div className="text-xs">{event.resource.location}</div>
+        <div className="text-xs opacity-90 leading-tight">📍 {event.resource.location}</div>
+      )}
+      {event.resource.is_fixed && (
+        <div className="text-xs opacity-75 mt-auto">🔒</div>
       )}
     </div>
   );
@@ -285,35 +288,37 @@ export function Calendar() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="max-w-[1400px] mx-auto p-6">
+        {/* Header */}
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold mb-2">My Schedule</h1>
-            <p className="text-gray-600">
-              {events.length} class(es) scheduled • {user?.email}
+            <h1 className="text-4xl font-bold text-slate-900 mb-1">My Schedule</h1>
+            <p className="text-slate-600 text-sm">
+              {events.length} {events.length === 1 ? 'event' : 'events'} • {user?.email}
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/upload')}>
-              Upload PDF
+            <Button variant="outline" onClick={() => navigate('/upload')} className="bg-white hover:bg-slate-50">
+              📄 Upload PDF
             </Button>
-            <Button variant="outline" onClick={() => navigate('/add-event')}>
-              Add Event
+            <Button variant="outline" onClick={() => navigate('/add-event')} className="bg-white hover:bg-slate-50">
+              ➕ Add Event
             </Button>
-            <Button variant="outline" onClick={() => navigate('/manual')}>
-              Add Classes
+            <Button variant="outline" onClick={() => navigate('/manual')} className="bg-white hover:bg-slate-50">
+              📚 Add Classes
             </Button>
-            <Button variant="outline" onClick={() => navigate('/catalog')}>
-              Manage Classes
+            <Button variant="outline" onClick={() => navigate('/catalog')} className="bg-white hover:bg-slate-50">
+              📋 Manage Classes
             </Button>
-            <Button variant="outline" onClick={signOut}>
+            <Button variant="destructive" onClick={signOut}>
               Sign Out
             </Button>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-4" style={{ height: '700px' }}>
+        {/* Calendar Container */}
+        <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6" style={{ height: '700px' }}>
           <DragAndDropCalendar
             localizer={localizer}
             events={events}
@@ -340,34 +345,35 @@ export function Calendar() {
           />
         </div>
 
-        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-          <h3 className="font-semibold mb-2">Legend</h3>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {/* Legend */}
+        <div className="mt-6 p-5 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+          <h3 className="font-semibold text-slate-900 mb-3 text-sm uppercase tracking-wide">Event Types</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-500 rounded" style={{
-                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,.1) 10px, rgba(255,255,255,.1) 20px)'
+              <div className="w-5 h-5 bg-blue-500 rounded shadow-sm" style={{
+                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(255,255,255,.2) 8px, rgba(255,255,255,.2) 16px)'
               }}></div>
-              <span className="text-sm">Fixed Classes</span>
+              <span className="text-sm font-medium text-slate-700">Fixed Classes</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#10b981' }}></div>
-              <span className="text-sm">Personal</span>
+              <div className="w-5 h-5 rounded shadow-sm" style={{ backgroundColor: '#10b981' }}></div>
+              <span className="text-sm font-medium text-slate-700">Personal</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#f59e0b' }}></div>
-              <span className="text-sm">Work</span>
+              <div className="w-5 h-5 rounded shadow-sm" style={{ backgroundColor: '#f59e0b' }}></div>
+              <span className="text-sm font-medium text-slate-700">Work</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#8b5cf6' }}></div>
-              <span className="text-sm">Study</span>
+              <div className="w-5 h-5 rounded shadow-sm" style={{ backgroundColor: '#8b5cf6' }}></div>
+              <span className="text-sm font-medium text-slate-700">Study</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }}></div>
-              <span className="text-sm">Gym/Exercise</span>
+              <div className="w-5 h-5 rounded shadow-sm" style={{ backgroundColor: '#ef4444' }}></div>
+              <span className="text-sm font-medium text-slate-700">Gym/Exercise</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ec4899' }}></div>
-              <span className="text-sm">Social</span>
+              <div className="w-5 h-5 rounded shadow-sm" style={{ backgroundColor: '#ec4899' }}></div>
+              <span className="text-sm font-medium text-slate-700">Social</span>
             </div>
           </div>
         </div>

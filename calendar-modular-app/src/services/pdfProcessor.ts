@@ -1,4 +1,5 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { supabase } from '../lib/supabase';
 
 // Configure PDF.js worker - use the npm package version
@@ -59,8 +60,12 @@ export async function processPDF(file: File, userId: string): Promise<ExtractedC
       throw new Error('Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your environment variables.');
     }
     
-    // Step 2: Create the prompt for class schedule extraction
-    const userPrompt = `Analyze this text from a class schedule PDF and extract ALL class sections:
+    // Step 2: Initialize Gemini AI
+    const genAI = new GoogleGenerativeAI(API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    
+    // Step 3: Create the prompt for class schedule extraction
+    const prompt = `Analyze this text from a class schedule PDF and extract ALL class sections:
 
 ${pdfText}
 
@@ -76,46 +81,11 @@ Return a JSON array where each object has:
 
 Use null for missing fields. Return ONLY the JSON array, no other text.`;
 
-    // Step 3: Call Gemini API
+    // Step 4: Generate content with Gemini
     console.log('Sending to Gemini API...');
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 60000);
-    
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: userPrompt
-            }]
-          }],
-          generationConfig: {
-            temperature: 0.1,
-            topK: 1,
-            topP: 1,
-            maxOutputTokens: 2048,
-          }
-        }),
-        signal: controller.signal
-      }
-    );
-    
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error('Gemini API error:', errorData);
-      throw new Error(`Gemini API error: ${errorData.error?.message || 'Unknown error'}`);
-    }
-
-    const result = await response.json();
-    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
     
     if (!text) {
       throw new Error('No response from Gemini API');
