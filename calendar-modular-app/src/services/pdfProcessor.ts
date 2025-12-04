@@ -148,7 +148,7 @@ Use null for missing fields. Return ONLY the JSON array, no other text.`;
       is_hidden: false
     }));
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('class_catalog')
       .insert(classesToInsert)
       .select();

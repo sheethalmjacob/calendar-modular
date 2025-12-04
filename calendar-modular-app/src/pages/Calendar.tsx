@@ -1,15 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Calendar as BigCalendar, dateFnsLocalizer } from 'react-big-calendar';
 import type { View } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay } from 'date-fns';
+import { format, parse, startOfWeek, getDay, addWeeks, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
+// @ts-ignore
+import dndModule from 'react-big-calendar/lib/addons/dragAndDrop/index.js';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
+
+const withDragAndDrop = dndModule.default || dndModule;
 
 const locales = {
   'en-US': enUS,
@@ -52,7 +55,7 @@ export function Calendar() {
     if (user) {
       loadClasses();
     }
-  }, [user]);
+  }, [user, date, view]);
 
   const loadClasses = async () => {
     try {
@@ -77,10 +80,26 @@ export function Calendar() {
 
       // Convert classes to calendar events
       const calendarEvents: ClassEvent[] = [];
-      const today = new Date();
-      const currentWeekStart = startOfWeek(today, { weekStartsOn: 0 });
+      
+      // Calculate date range based on current view
+      let rangeStart: Date;
+      let rangeEnd: Date;
+      
+      if (view === 'week') {
+        // Show current week plus 2 weeks before and after for smooth scrolling
+        rangeStart = addWeeks(startOfWeek(date, { weekStartsOn: 0 }), -2);
+        rangeEnd = addWeeks(startOfWeek(date, { weekStartsOn: 0 }), 3);
+      } else if (view === 'month') {
+        // Show entire month
+        rangeStart = startOfMonth(date);
+        rangeEnd = endOfMonth(date);
+      } else {
+        // Day view - show current day plus a few days around it
+        rangeStart = addWeeks(date, -1);
+        rangeEnd = addWeeks(date, 1);
+      }
 
-      // Add fixed classes
+      // Add fixed classes (recurring for all weeks in range)
       classes?.forEach((classItem) => {
         const dayMap: { [key: string]: number } = {
           'U': 0, 'M': 1, 'T': 2, 'W': 3, 'R': 4, 'F': 5, 'S': 6,
@@ -89,31 +108,35 @@ export function Calendar() {
         classItem.days.forEach((day: string) => {
           const dayOfWeek = dayMap[day];
           if (dayOfWeek !== undefined) {
-            const eventDate = new Date(currentWeekStart);
-            eventDate.setDate(currentWeekStart.getDate() + dayOfWeek);
+            // Generate occurrences for each week in the range
+            const allDaysInRange = eachDayOfInterval({ start: rangeStart, end: rangeEnd });
+            
+            allDaysInRange.forEach((currentDate) => {
+              if (getDay(currentDate) === dayOfWeek) {
+                const [startHour, startMinute] = classItem.start_time.split(':');
+                const [endHour, endMinute] = classItem.end_time.split(':');
 
-            const [startHour, startMinute] = classItem.start_time.split(':');
-            const [endHour, endMinute] = classItem.end_time.split(':');
+                const startTime = new Date(currentDate);
+                startTime.setHours(parseInt(startHour), parseInt(startMinute), 0);
 
-            const startTime = new Date(eventDate);
-            startTime.setHours(parseInt(startHour), parseInt(startMinute), 0);
+                const endTime = new Date(currentDate);
+                endTime.setHours(parseInt(endHour), parseInt(endMinute), 0);
 
-            const endTime = new Date(eventDate);
-            endTime.setHours(parseInt(endHour), parseInt(endMinute), 0);
-
-            calendarEvents.push({
-              id: `${classItem.id}-${day}`,
-              title: `${classItem.course_code || classItem.course_name}`,
-              start: startTime,
-              end: endTime,
-              resource: {
-                course_code: classItem.course_code,
-                section: classItem.section,
-                instructor: classItem.instructor,
-                location: classItem.location,
-                is_fixed: true,
-                category: null,
-              },
+                calendarEvents.push({
+                  id: `${classItem.id}-${day}-${currentDate.toISOString()}`,
+                  title: `${classItem.course_code || classItem.course_name}`,
+                  start: startTime,
+                  end: endTime,
+                  resource: {
+                    course_code: classItem.course_code,
+                    section: classItem.section,
+                    instructor: classItem.instructor,
+                    location: classItem.location,
+                    is_fixed: true,
+                    category: null,
+                  },
+                });
+              }
             });
           }
         });
@@ -310,7 +333,7 @@ export function Calendar() {
             onEventDrop={handleEventDrop}
             onEventResize={handleEventResize}
             resizable
-            draggableAccessor={(event) => !event.resource.is_fixed}
+            draggableAccessor={(event: ClassEvent) => !event.resource.is_fixed}
           />
         </div>
 
