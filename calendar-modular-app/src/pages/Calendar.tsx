@@ -52,6 +52,8 @@ export function Calendar() {
   const [exporting, setExporting] = useState(false);
   const [view, setView] = useState<View>('week');
   const [date, setDate] = useState(new Date());
+  const [selectedEvent, setSelectedEvent] = useState<ClassEvent | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -71,6 +73,13 @@ export function Calendar() {
         .eq('is_hidden', false);
 
       if (classError) throw classError;
+
+      console.log('Loaded classes from database:', classes);
+      console.log('Number of classes:', classes?.length);
+      if (classes && classes.length > 0) {
+        console.log('First class ID:', classes[0].id);
+        console.log('First class structure:', classes[0]);
+      }
 
       // Load flexible events
       const { data: flexibleEvents, error: eventsError } = await supabase
@@ -126,10 +135,11 @@ export function Calendar() {
 
                 calendarEvents.push({
                   id: `${classItem.id}-${day}-${currentDate.toISOString()}`,
-                  title: `${classItem.course_code || classItem.course_name}`,
+                  title: `${classItem.course_name}`,
                   start: startTime,
                   end: endTime,
                   resource: {
+                    class_id: classItem.id,
                     course_code: classItem.course_code,
                     section: classItem.section,
                     instructor: classItem.instructor,
@@ -165,6 +175,8 @@ export function Calendar() {
       setEvents(calendarEvents);
     } catch (error) {
       console.error('Error loading calendar data:', error);
+      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
     } finally {
       setLoading(false);
     }
@@ -219,26 +231,13 @@ export function Calendar() {
 
   const CustomEvent = ({ event }: { event: ClassEvent }) => {
     const hasOverlap = getOverlappingEvents(event).length > 0;
-    const timeFormat = 'h:mm a';
     
     return (
-      <div className="h-full" style={{ padding: '16px' }}>
-        <div className="font-bold leading-tight" style={{ fontSize: '14px', marginBottom: '4px' }}>
-          {format(event.start, timeFormat)} - {format(event.end, timeFormat)}
-        </div>
-        <div className="font-medium leading-tight flex items-center gap-1" style={{ fontSize: '14px', marginBottom: '4px' }}>
+      <div className="h-full flex items-center" style={{ padding: '8px' }}>
+        <div className="font-medium leading-tight flex items-center gap-1" style={{ fontSize: '13px' }}>
           {hasOverlap && <span className="text-red-600">⚠️</span>}
           {event.title}
         </div>
-        {event.resource.location && (
-          <div className="flex items-center gap-1 opacity-90" style={{ fontSize: '12px' }}>
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            {event.resource.location}
-          </div>
-        )}
       </div>
     );
   };
@@ -324,6 +323,104 @@ export function Calendar() {
       alert('Failed to export calendar. Please try again.');
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleSelectEvent = (event: ClassEvent) => {
+    console.log('Event selected:', {
+      title: event.title,
+      isFixed: event.resource.is_fixed,
+      eventId: event.id,
+      resource: event.resource
+    });
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  };
+
+  const handleHideClass = async () => {
+    if (!selectedEvent || !selectedEvent.resource.is_fixed || !user) {
+      console.log('Cannot hide class:', { 
+        hasEvent: !!selectedEvent, 
+        isFixed: selectedEvent?.resource.is_fixed, 
+        hasUser: !!user 
+      });
+      return;
+    }
+    
+    if (!confirm('Hide this class from your calendar? You can unhide it later from the Class Catalog.')) {
+      return;
+    }
+    
+    try {
+      // Get the class ID from the resource object
+      const classId = selectedEvent.resource.class_id;
+      console.log('Attempting to hide class:', classId, 'for user:', user.id);
+      console.log('Full event ID:', selectedEvent.id);
+      
+      const { data, error } = await supabase
+        .from('class_catalog')
+        .update({ is_hidden: true })
+        .eq('id', classId)
+        .eq('user_id', user.id)
+        .select();
+      
+      if (error) {
+        console.error('Supabase error details:', JSON.stringify(error, null, 2));
+        console.error('Error message:', error.message);
+        console.error('Error code:', error.code);
+        console.error('Error details:', error.details);
+        console.error('Error hint:', error.hint);
+        throw error;
+      }
+      
+      console.log('Hide successful, updated rows:', data);
+      
+      setIsModalOpen(false);
+      setSelectedEvent(null);
+      await loadClasses(); // Reload to update view
+    } catch (error) {
+      console.error('Error hiding class:', error);
+      alert(`Failed to hide class. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!selectedEvent || selectedEvent.resource.is_fixed || !user) {
+      console.log('Cannot delete event:', { 
+        hasEvent: !!selectedEvent, 
+        isFixed: selectedEvent?.resource.is_fixed, 
+        hasUser: !!user 
+      });
+      return;
+    }
+    
+    if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      console.log('Attempting to delete event:', selectedEvent.id, 'for user:', user.id);
+      
+      const { data, error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', selectedEvent.id)
+        .eq('user_id', user.id)
+        .select();
+      
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Delete successful, deleted rows:', data);
+      
+      setIsModalOpen(false);
+      setSelectedEvent(null);
+      await loadClasses(); // Reload to update view
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      alert(`Failed to delete event. Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -536,20 +633,21 @@ export function Calendar() {
         </div>
 
         {/* Calendar Container */}
-        <div className="bg-white border border-gray-300" style={{ borderRadius: '20px', padding: '24px', height: '700px' }}>
-          <DragAndDropCalendar
-            localizer={localizer}
-            events={events}
-            startAccessor="start"
-            endAccessor="end"
-            view={view}
-            onView={setView}
-            date={date}
-            onNavigate={setDate}
-            defaultView="week"
-            views={['week', 'day', 'agenda']}
-            step={15}
-            timeslots={4}
+        <div className="bg-white border border-gray-300" style={{ borderRadius: '20px', padding: '24px' }}>
+          <div style={{ height: 'calc(100vh - 450px)', minHeight: '600px' }}>
+            <DragAndDropCalendar
+              localizer={localizer}
+              events={events}
+              startAccessor="start"
+              endAccessor="end"
+              view={view}
+              onView={setView}
+              date={date}
+              onNavigate={setDate}
+              defaultView="week"
+              views={['week', 'day', 'agenda']}
+              step={15}
+              timeslots={4}
             eventPropGetter={eventStyleGetter}
             components={{
               event: CustomEvent,
@@ -558,9 +656,11 @@ export function Calendar() {
             max={new Date(2024, 0, 1, 22, 0)}
             onEventDrop={handleEventDrop}
             onEventResize={handleEventResize}
+            onSelectEvent={handleSelectEvent}
             resizable
             draggableAccessor={(event: ClassEvent) => !event.resource.is_fixed}
           />
+          </div>
         </div>
 
         <div className="p-5 bg-white border border-gray-300" style={{ marginTop: '24px', borderRadius: '20px' }}>
@@ -647,6 +747,121 @@ export function Calendar() {
             </div>
           );
         })()}
+
+        {/* Event Detail Modal */}
+        {isModalOpen && selectedEvent && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setIsModalOpen(false)}
+          >
+            <div 
+              className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+              onClick={(e) => e.stopPropagation()}
+              style={{ borderRadius: '20px' }}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-bold text-gray-900">
+                  {selectedEvent.resource.is_fixed ? 'Class Details' : 'Event Details'}
+                </h3>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-3 mb-6">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Title</p>
+                  <p className="text-base font-medium text-gray-900">{selectedEvent.title}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Time</p>
+                  <p className="text-base text-gray-900">
+                    {format(selectedEvent.start, 'EEEE, MMMM d, yyyy')}
+                  </p>
+                  <p className="text-base text-gray-900">
+                    {format(selectedEvent.start, 'h:mm a')} - {format(selectedEvent.end, 'h:mm a')}
+                  </p>
+                </div>
+
+                {selectedEvent.resource.location && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Location</p>
+                    <p className="text-base text-gray-900">{selectedEvent.resource.location}</p>
+                  </div>
+                )}
+
+                {selectedEvent.resource.is_fixed && (
+                  <>
+                    {selectedEvent.resource.course_code && (
+                      <div>
+                        <p className="text-sm text-gray-500 mb-1">Course Code</p>
+                        <p className="text-base text-gray-900">{selectedEvent.resource.course_code}</p>
+                      </div>
+                    )}
+                    {selectedEvent.resource.section && (
+                      <div>
+                        <p className="text-sm text-gray-500 mb-1">Section</p>
+                        <p className="text-base text-gray-900">{selectedEvent.resource.section}</p>
+                      </div>
+                    )}
+                    {selectedEvent.resource.instructor && (
+                      <div>
+                        <p className="text-sm text-gray-500 mb-1">Instructor</p>
+                        <p className="text-base text-gray-900">{selectedEvent.resource.instructor}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {!selectedEvent.resource.is_fixed && selectedEvent.resource.category && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Category</p>
+                    <p className="text-base text-gray-900 capitalize">{selectedEvent.resource.category}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                {selectedEvent.resource.is_fixed ? (
+                  <Button
+                    onClick={handleHideClass}
+                    variant="outline"
+                    className="flex-1 border-gray-300"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                    Hide Class
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleDeleteEvent}
+                    variant="destructive"
+                    className="flex-1 bg-red-600 text-white hover:bg-red-700"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete Event
+                  </Button>
+                )}
+                <Button
+                  onClick={() => setIsModalOpen(false)}
+                  variant="outline"
+                  className="flex-1 border-gray-300"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
