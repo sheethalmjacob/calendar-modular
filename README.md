@@ -1,4 +1,20 @@
-# Idea: A tool that takes in calendars and makes it modular so that you can drag and drop into your schedule
+# Calendar Modular
+
+## What We're Building
+
+Imagine having a calendar where your events are like puzzle pieces you can move around freely. That's Calendar Modular!
+
+Instead of your events being locked in place like traditional calendars, we turn them into flexible time blocks you can drag, drop, and resize however you want. Import your schedule from Google Calendar, Outlook, or Apple Calendar, then rearrange everything to fit your life better.
+
+The magic? Everything you import becomes yours to control. No syncing back and forth—just grab what you need, reorganize it however makes sense, and when you're happy with it, export it back to your regular calendar.
+
+Perfect for:
+- Planning your week without the rigid structure of normal calendars
+- Finding meeting times with others without endless email chains
+- Seeing your schedule as flexible blocks instead of fixed appointments
+- Sharing your availability without revealing private event details
+
+Think of it as the difference between writing in pen versus using sticky notes. Same information, way more flexibility.
 
 ## Core Requirements
 - Needs to work on a laptop
@@ -27,4 +43,4 @@
 
 ## UI Requirements
 - Clean structured app
-- has a quirky ditto as the mascot
+- has a quirky pokemon ditto as the mascot
