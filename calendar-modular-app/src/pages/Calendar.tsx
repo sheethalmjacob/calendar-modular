@@ -33,6 +33,7 @@ interface ClassEvent {
   start: Date;
   end: Date;
   resource: {
+    class_id?: string;
     course_code: string | null;
     section: string | null;
     instructor: string | null;

@@ -347,7 +347,6 @@ export function ClassCatalog() {
                               <Input
                                 value={editingName}
                                 onChange={(e) => setEditingName(e.target.value)}
-                                onBlur={() => saveTrackName(track.id)}
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') saveTrackName(track.id)
                                   if (e.key === 'Escape') setEditingTrack(null)
@@ -355,6 +354,20 @@ export function ClassCatalog() {
                                 className="max-w-md"
                                 autoFocus
                               />
+                              <Button
+                                size="sm"
+                                onClick={() => saveTrackName(track.id)}
+                                className="bg-black text-white hover:bg-gray-800"
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setEditingTrack(null)}
+                              >
+                                Cancel
+                              </Button>
                             </div>
                           ) : (
                             <div className="flex-1">
