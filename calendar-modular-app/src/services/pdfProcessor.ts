@@ -142,9 +142,28 @@ Return ONLY valid JSON array, no explanation.`;
       throw new Error('Invalid response format from AI');
     }
 
-    // Save to database
+    // Step 4: Create a schedule track for this PDF
+    const trackName = `${file.name.replace('.pdf', '')} - ${new Date().toLocaleDateString()}`;
+    
+    const { data: track, error: trackError } = await supabase
+      .from('schedule_tracks')
+      .insert({
+        user_id: userId,
+        name: trackName,
+        pdf_filename: file.name
+      })
+      .select()
+      .single();
+
+    if (trackError) {
+      console.error('Failed to create schedule track:', trackError);
+      throw new Error('Failed to create schedule track');
+    }
+
+    // Step 5: Save classes to database with track reference
     const classesToInsert = extractedClasses.map(classData => ({
       user_id: userId,
+      track_id: track.id,
       course_name: classData.course_name,
       course_code: classData.course_code || null,
       section: classData.section || null,
