@@ -6,6 +6,7 @@ import { Calendar } from './pages/Calendar'
 import { PDFUpload } from './pages/PDFUpload'
 import { ClassCatalog } from './pages/ClassCatalog'
 import { ManualEntry } from './pages/ManualEntry'
+import { AddEvent } from './pages/AddEvent'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -45,6 +46,14 @@ function App() {
             }
           />
           <Route
+            path="/add-event"
+            element={
+              <ProtectedRoute>
+                <AddEvent />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/catalog"
             element={
               <ProtectedRoute>
@@ -60,7 +69,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/manual" />} />
+          <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
