@@ -76,15 +76,15 @@ Return a JSON array where each object has:
 
 Use null for missing fields. Return ONLY the JSON array, no other text.`;
 
-    // Step 3: Call Gemini API - use gemini-pro
+    // Step 3: Call Gemini API - use v1beta with gemini-1.5-flash-latest
     console.log('Sending to Gemini API...');
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
     
-    // Use gemini-pro which is available in v1
+    // Use v1beta with the latest flash model
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`,
       {
         method: 'POST',
         headers: {
