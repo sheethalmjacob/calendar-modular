@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { exportCalendar } from '@/services/calendarExport';
 // @ts-ignore
 import dndModule from 'react-big-calendar/lib/addons/dragAndDrop/index.js';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -48,6 +49,7 @@ export function Calendar() {
   const navigate = useNavigate();
   const [events, setEvents] = useState<ClassEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [view, setView] = useState<View>('week');
   const [date, setDate] = useState(new Date());
 
@@ -168,6 +170,20 @@ export function Calendar() {
     }
   };
 
+  // Check if two events overlap
+  const eventsOverlap = (event1: ClassEvent, event2: ClassEvent): boolean => {
+    return (
+      event1.id !== event2.id &&
+      event1.start < event2.end &&
+      event1.end > event2.start
+    );
+  };
+
+  // Find all events that overlap with a given event
+  const getOverlappingEvents = (event: ClassEvent): ClassEvent[] => {
+    return events.filter(e => eventsOverlap(event, e));
+  };
+
   const eventStyleGetter = (event: ClassEvent) => {
     const categoryColors: { [key: string]: string } = {
       personal: '#10b981',
@@ -181,13 +197,17 @@ export function Calendar() {
       ? '#3b82f6' 
       : (event.resource.category ? categoryColors[event.resource.category] : '#10b981');
 
+    // Check for overlaps
+    const hasOverlap = getOverlappingEvents(event).length > 0;
+
     const style: React.CSSProperties = {
       backgroundColor,
       borderRadius: '5px',
       opacity: 0.8,
       color: 'white',
-      border: '0px',
+      border: hasOverlap ? '3px solid #ef4444' : '0px',
       display: 'block',
+      boxShadow: hasOverlap ? '0 0 0 2px #fee2e2, 0 0 10px rgba(239, 68, 68, 0.3)' : 'none',
     };
 
     if (event.resource.is_fixed) {
@@ -197,14 +217,21 @@ export function Calendar() {
     return { style };
   };
 
-  const CustomEvent = ({ event }: { event: ClassEvent }) => (
-    <div className="p-2 h-full">
-      <div className="font-semibold text-sm leading-tight">{event.title}</div>
-      {event.resource.location && (
-        <div className="text-xs opacity-90 mt-1">{event.resource.location}</div>
-      )}
-    </div>
-  );
+  const CustomEvent = ({ event }: { event: ClassEvent }) => {
+    const hasOverlap = getOverlappingEvents(event).length > 0;
+    
+    return (
+      <div className="p-2 h-full">
+        <div className="font-semibold text-sm leading-tight flex items-center gap-1">
+          {hasOverlap && <span className="text-red-200">⚠️</span>}
+          {event.title}
+        </div>
+        {event.resource.location && (
+          <div className="text-xs opacity-90 mt-1">{event.resource.location}</div>
+        )}
+      </div>
+    );
+  };
 
   const handleEventDrop = useCallback(async ({ event, start, end }: any) => {
     // Only allow dragging flexible events
@@ -276,6 +303,20 @@ export function Calendar() {
     }
   }, [user]);
 
+  const handleExport = async (format: 'download' | 'google' | 'outlook' | 'apple') => {
+    if (!user) return;
+    
+    try {
+      setExporting(true);
+      await exportCalendar(user.id, format);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Failed to export calendar. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -294,19 +335,49 @@ export function Calendar() {
               {events.length} {events.length === 1 ? 'event' : 'events'} • {user?.email}
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/upload')} className="bg-white border-gray-300">
-              Upload PDF
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/add-event')} className="bg-white border-gray-300">
-              Add Event
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/manual')} className="bg-white border-gray-300">
-              Add Classes
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/catalog')} className="bg-white border-gray-300">
-              Manage Classes
-            </Button>
+          <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate('/upload')} className="bg-white border-gray-300">
+                Upload PDF
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/add-event')} className="bg-white border-gray-300">
+                Add Event
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/manual')} className="bg-white border-gray-300">
+                Add Classes
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/catalog')} className="bg-white border-gray-300">
+                Manage Classes
+              </Button>
+            </div>
+            
+            <div className="flex gap-2 border-l pl-2 ml-2">
+              <Button 
+                variant="outline" 
+                onClick={() => handleExport('google')} 
+                disabled={exporting || events.length === 0}
+                className="bg-white border-gray-300"
+              >
+                📅 Export to Google
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => handleExport('outlook')} 
+                disabled={exporting || events.length === 0}
+                className="bg-white border-gray-300"
+              >
+                📅 Export to Outlook
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => handleExport('apple')} 
+                disabled={exporting || events.length === 0}
+                className="bg-white border-gray-300"
+              >
+                📅 Export to Apple
+              </Button>
+            </div>
+            
             <Button variant="destructive" onClick={signOut}>
               Sign Out
             </Button>
@@ -369,8 +440,61 @@ export function Calendar() {
               <div className="w-5 h-5 rounded" style={{ backgroundColor: '#ec4899' }}></div>
               <span className="text-sm text-gray-700">Social</span>
             </div>
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded border-4 border-red-500" style={{ backgroundColor: '#10b981' }}></div>
+              <span className="text-sm text-gray-700">⚠️ Time Conflict</span>
+            </div>
           </div>
         </div>
+
+        {/* Overlap Warnings Section */}
+        {(() => {
+          const overlappingPairs: Array<{ event1: ClassEvent; event2: ClassEvent }> = [];
+          const seen = new Set<string>();
+          
+          events.forEach(event => {
+            const overlaps = getOverlappingEvents(event);
+            overlaps.forEach(overlap => {
+              const pairKey = [event.id, overlap.id].sort().join('-');
+              if (!seen.has(pairKey)) {
+                seen.add(pairKey);
+                overlappingPairs.push({ event1: event, event2: overlap });
+              }
+            });
+          });
+
+          if (overlappingPairs.length === 0) return null;
+
+          return (
+            <div className="mt-6 p-5 bg-red-50 rounded-xl border-2 border-red-200">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl">⚠️</span>
+                <h3 className="font-semibold text-red-900 text-sm">
+                  {overlappingPairs.length} Time {overlappingPairs.length === 1 ? 'Conflict' : 'Conflicts'} Detected
+                </h3>
+              </div>
+              <div className="space-y-2">
+                {overlappingPairs.map((pair, idx) => (
+                  <div key={idx} className="bg-white p-3 rounded-lg border border-red-200">
+                    <div className="flex items-start gap-2 text-sm">
+                      <span className="text-red-600 font-semibold">•</span>
+                      <div>
+                        <span className="font-semibold text-gray-900">{pair.event1.title}</span>
+                        <span className="text-gray-600"> overlaps with </span>
+                        <span className="font-semibold text-gray-900">{pair.event2.title}</span>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {format(pair.event1.start, 'MMM d, h:mm a')} - {format(pair.event1.end, 'h:mm a')} 
+                          {' & '}
+                          {format(pair.event2.start, 'MMM d, h:mm a')} - {format(pair.event2.end, 'h:mm a')}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
