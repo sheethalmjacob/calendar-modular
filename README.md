@@ -2,45 +2,148 @@
 
 ## What We're Building
 
-Imagine having a calendar where your events are like puzzle pieces you can move around freely. That's Calendar Modular!
+**Calendar Modular is a schedule planning sandbox for college students.** Upload your class schedule PDF, experiment with different schedule layouts, and export the perfect combination to your real calendar.
 
-Instead of your events being locked in place like traditional calendars, we turn them into flexible time blocks you can drag, drop, and resize however you want. Import your schedule from Google Calendar, Outlook, or Apple Calendar, then rearrange everything to fit your life better.
+### The Problem
+You get a PDF of available class sections with dozens of time options. Building your ideal schedule means:
+- Manually checking each time slot
+- Trying to visualize how classes fit with your personal commitments
+- Endless back-and-forth between the PDF and your calendar app
+- No easy way to experiment with "what if" scenarios
 
-The magic? Everything you import becomes yours to control. No syncing back and forth—just grab what you need, reorganize it however makes sense, and when you're happy with it, export it back to your regular calendar.
+### The Solution
+Calendar Modular turns schedule planning into a visual, interactive experience:
 
-Perfect for:
-- Planning your week without the rigid structure of normal calendars
-- Finding meeting times with others without endless email chains
-- Seeing your schedule as flexible blocks instead of fixed appointments
-- Sharing your availability without revealing private event details
+1. **Upload your PDF class schedule** → AI extracts all class options as visual time blocks
+2. **Browse the class catalog** → See every section with times displayed on a calendar
+3. **Hide/unhide classes** → Pick which sections you want, hide the rest
+4. **Add personal events** → Drag study time, work, gym, etc. around the fixed class blocks
+5. **Experiment freely** → Try different combinations until your schedule feels right
+6. **Export when ready** → Send your finalized schedule to Google Calendar, Outlook, or Apple Calendar
+7. **Make changes anytime** → The app maintains a connection so you can come back and adjust
 
-Think of it as the difference between writing in pen versus using sticky notes. Same information, way more flexibility.
+### Key Features
+
+**📄 PDF-First Workflow**
+- Upload class schedules from your university
+- AI-powered extraction using Google Gemini
+- Automatic parsing of class names, times, locations, and instructors
+
+**🧩 Class Catalog Browser**
+- See all extracted classes in a searchable catalog
+- Hide/unhide specific sections to test different combinations
+- Fixed time blocks (can't be moved—they're set by the university)
+- Hidden classes are removed when you finalize your schedule
+
+**✨ Schedule Planning Canvas**
+- Week view showing your selected classes
+- Drag-and-drop personal events around fixed class times
+- Visual overlap warnings (won't let you double-book)
+- 15-minute snap increments for precise scheduling
+- Color-coded blocks (classes vs. personal events)
+
+**🔄 Flexible Experimentation**
+- One working canvas where you can adjust until satisfied
+- Compare your existing calendar with new class options
+- Import from Google Calendar, Outlook, or Apple Calendar to see current commitments
+- Try different schedule layouts before committing
+
+**📤 Smart Export**
+- Export finalized schedule to your real calendar (Google/Outlook/Apple)
+- Maintains connection for future edits
+- Warns before overwriting existing events
+- Only exports visible (unhidden) classes and personal events
+
+**🤝 Collaboration Features** (Phase 2)
+- Share your availability with study groups
+- Find common free time with classmates
+- Generate scheduling links for office hours or tutoring
+
+Think of it as a **schedule design studio**—where you build and perfect your semester schedule before making it real.
 
 ## Core Requirements
-- Needs to work on a laptop
-- It will be a website
+- Desktop-optimized web application (mobile support in Phase 4)
+- Laptop-friendly interface for students planning schedules
 
-## Importing & Data Management
-- Can add PDF calendars and exported calendars
-- Lets you import or view others' shared calendars
+## Primary Workflow: PDF → Plan → Export
+
+### 1. PDF Upload & Extraction
+- Upload college class schedule PDFs
+- AI-powered parsing with Google Gemini (free tier)
+- Extracts: course names, section numbers, times, days, locations, instructors
+- Creates visual time blocks on calendar
+- Initial target: standardized university schedule formats
+
+### 2. Class Catalog Management
+- Searchable/filterable catalog of all extracted classes
+- Hide/unhide individual class sections
+- Hidden classes removed from view but available to re-add
+- When finalized, hidden classes are permanently deleted
+- Visible classes marked as "fixed" (time cannot be changed)
+
+### 3. Schedule Planning Canvas
+- **Fixed Blocks**: PDF-imported classes (locked at university-set times)
+- **Flexible Blocks**: Personal events (draggable anywhere)
+- Visual distinction between fixed and flexible events
+- Drag-and-drop for personal commitments (study, work, gym, meals)
+- Overlap detection with warnings before saving
+- One working canvas (not multiple draft versions)
+
+### 4. Calendar Import for Context
+- Import existing events from Google Calendar, Outlook, or Apple Calendar
+- Shows current commitments alongside new class options
+- Helps visualize schedule conflicts
+- Imported events are flexible (can be moved)
+
+### 5. Export to Real Calendar
+- Export finalized schedule to Google/Outlook/Apple Calendar
+- Maintains connection for future edits (not one-time export)
+- User can return to planning canvas and re-export updates
+- Smart conflict detection during export
 
 ## Event Manipulation & UI
-- Makes scheduled events into movable and resizeable time blocks that can be placed on a calendar
-- Drag and drop functionality
-- Shows incoming meeting requests as blocks you can accept or move
 
-## Scheduling & Planning
-- Lets you schedule meetings directly inside the tool
-- Suggests open times based on your existing calendar blocks
+### Fixed Blocks (PDF-Imported Classes)
+- Display at university-specified times
+- Cannot be dragged to different times
+- Can be hidden/unhidden from class catalog
+- Visual styling indicates "locked" status
+- Color-coded by department or category
 
-## Sharing & Collaboration
-- Allows you to generate a scheduling link others can use to pick a time with you
-- Lets you temporarily overlay someone else's calendar to find matching free time
-- Can combine multiple people's calendars to find shared availability
+### Flexible Blocks (Personal Events)
+- Fully draggable and resizable
+- Snap to 15-minute increments
+- Can overlap with warnings (user decides)
+- Create new events by clicking empty time slots
+- Edit title, time, duration, description, location
+
+### UI Features
+- Week view as default (switchable to day/month)
+- Clean, student-friendly interface
+- Class catalog sidebar for browsing available sections
+- Overlap warnings before finalizing
+- Undo/redo for changes
+- Quirky Ditto mascot character throughout
+
+## Scheduling & Collaboration (Phase 2)
+- Generate scheduling links for study groups
+- Share availability with classmates (busy/free view only)
+- Find common free time with multiple people
+- Meeting request system for group projects
+
+## Sharing & Privacy
+- Shared calendars show only busy/free time blocks (no event details)
+- Request-based calendar overlay (requires approval)
+- Shareable links for scheduling (user pre-defines available times)
 
 ## Export & Integration
-- Can save and export it into a calendar you use like Outlook, Google, Apple
+- Export to Google Calendar, Outlook, Apple Calendar
+- Maintained connection (can re-export after changes)
+- Duplicate detection (won't create duplicate events)
+- Option to update existing events vs. create new ones
 
 ## UI Requirements
-- Clean structured app
-- has a quirky pokemon ditto as the mascot
+- Clean, minimalist design optimized for students
+- Quirky Ditto (Pokémon) mascot as visual identity
+- Desktop-first (mobile-responsive in Phase 4)
+- Accessible and keyboard-navigable

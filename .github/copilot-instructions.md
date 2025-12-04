@@ -1,7 +1,24 @@
 # Copilot Instructions for Calendar-Modular
 
 ## Project Overview
-A modular calendar management tool that allows users to import calendars from multiple sources (Google, Outlook, Apple), manipulate events as drag-and-drop blocks, and share availability with others. Key differentiator: one-time imports with flexible manipulation rather than live sync.
+
+**Calendar Modular is a schedule planning tool for college students.** The primary workflow is:
+
+1. **Upload PDF class schedule** → AI extracts all class sections as visual time blocks
+2. **Browse class catalog** → Hide/unhide specific sections to test combinations
+3. **Add personal events** → Drag flexible events around fixed class times
+4. **Experiment freely** → Try different schedule layouts on a planning canvas
+5. **Export when satisfied** → Send finalized schedule to Google/Outlook/Apple Calendar
+6. **Make changes anytime** → Maintained connection allows re-editing and re-export
+
+**Key Differentiators:**
+- **PDF-first workflow**: Class schedules uploaded, not manually entered
+- **Fixed vs. flexible blocks**: Classes are locked at university times, personal events are draggable
+- **Planning sandbox**: Experiment before committing to real calendar (not live sync)
+- **Class catalog**: Browse all extracted options, hide/unhide to test combinations
+- **Maintained connection**: Can return and update schedule, then re-export (not one-time)
+
+**Target Users:** College students building their semester schedules
 
 **Developer Context**: The project owner is non-technical and relies on AI assistance for all code implementation. Write complete, production-ready code with clear explanations. Provide step-by-step terminal commands and assume no prior coding knowledge.
 
@@ -31,14 +48,47 @@ A modular calendar management tool that allows users to import calendars from mu
 
 ## Core Design Principles
 
-### Event Manipulation
+### PDF Upload & Class Extraction (PRIMARY FEATURE)
+- **Target Format**: College/university class schedule PDFs
+- **AI Engine**: Google Gemini (free tier)
+- **Extraction Fields**: Course name, section, day(s), time, location, instructor
+- **Output**: Structured data → database → visual calendar blocks
+- **Block Type**: All PDF-imported classes are "fixed" (cannot be dragged to different times)
+
+### Class Catalog Management
+- **Purpose**: Browse all extracted classes, select which to include in schedule
+- **Hide/Unhide**: Toggle visibility of individual class sections
+- **Hidden Classes**: Removed from calendar view but still in catalog (can be re-added)
+- **Finalization**: When user exports, hidden classes are permanently deleted
+- **Search/Filter**: By course code, department, time, instructor
+
+### Event Types & Behavior
+
+#### Fixed Blocks (PDF-Imported Classes)
+- **Cannot be moved** to different times (locked by university)
+- **Can be hidden** via class catalog toggle
+- **Visual distinction**: Striped pattern, lock icon, or distinct color
+- **Required Fields**: Course name, time, day(s) (from PDF extraction)
+- **Optional Fields**: Section, location, instructor (from PDF if available)
+- **No drag-and-drop** for repositioning
+- **No time editing** (times are set by university)
+
+#### Flexible Blocks (Personal Events)
+- **Fully draggable** to any time slot
+- **Resizable** from top and bottom edges (15-minute snap increments)
+- **Created manually** by user clicking empty slots
 - **Required Fields**: Title, time, duration
-- **Optional Fields**: Description, location, attendees
-- **Time Block Resizing**: Snap to 15-minute increments
-- **Drag & Drop**: Allow overlap but show visual warnings
-- **Conflict Handling**: Warn but let user decide (user has final control)
-- **Color Coding**: Preset categories (work, personal, meetings, etc.)
-- **Recurring Events**: Basic patterns (daily, weekly, monthly)
+- **Optional Fields**: Description, location, category
+- **Color Coding**: By category (work, study, gym, personal, etc.)
+- **Overlap allowed** with visual warnings
+
+### Schedule Planning Canvas
+- **Mode**: Single working canvas (not multiple draft schedules)
+- **Workflow**: Adjust, experiment, finalize, export
+- **Auto-save**: Changes saved to database automatically
+- **Undo/Redo**: Support reverting changes
+- **Overlap Warnings**: Visual indicators (red outline) when events conflict
+- **Conflict Prevention**: Warn before export but user has final decision
 
 ### Privacy & Sharing Model
 - **Shared Calendar View**: Show only busy/free time blocks (no event details)
@@ -60,22 +110,75 @@ A modular calendar management tool that allows users to import calendars from mu
 ## Implementation Phases
 
 See `DECISIONS.md` for the 4-phase rollout plan:
-1. **Phase 1**: Core calendar view, drag-and-drop, import from 3 calendar services, auth
-2. **Phase 2**: Scheduling links, calendar sharing, meeting requests
-3. **Phase 3**: PDF parsing, multi-person overlay, smart suggestions, export
-4. **Phase 4**: Multi-timezone, advanced recurring patterns, mobile, performance
+1. **Phase 1**: **PDF upload & parsing (PRIMARY)**, class catalog, calendar view with fixed/flexible blocks, drag-and-drop for personal events, calendar import (context), export with maintained connection, auth
+2. **Phase 2**: Scheduling links, calendar sharing (busy/free view), multi-person overlay, meeting requests
+3. **Phase 3**: Smart schedule suggestions, recurring events, enhanced PDF parsing, schedule templates
+4. **Phase 4**: Multi-timezone, mobile optimization, performance, advanced features (waitlist tracking, prerequisite validation)
 
 ## Development Guidelines
+
+### When Implementing PDF Upload
+- File upload accepts .pdf files
+- Send to Google Gemini API with prompt: "Extract class schedule information as JSON"
+- Parse JSON response for: course_name, section, days, start_time, end_time, location, instructor
+- Create database records with `event_type = 'fixed'` and `is_hidden = false`
+- Display success message: "Extracted X classes from PDF"
+- Redirect to class catalog view
+
+### When Implementing Class Catalog
+- Sidebar or drawer component showing all extracted classes
+- Table/card view with columns: Course, Section, Time, Location, Instructor, Visibility Toggle
+- Hide/unhide toggle: Updates `is_hidden` field in database
+- Only unhidden classes appear on calendar
+- Search bar filters by course code or name
+- Visual count: "5 selected / 12 total classes"
 
 ### When Implementing Calendar Views
 - Default to week view but make view type easily switchable
 - 15-minute snap increments are the standard grid unit
-- Time blocks must be draggable and resizable from both top and bottom edges
+- **Two block types with different behavior:**
+  - **Fixed blocks** (PDF classes): No drag/resize, locked position, visual distinction (striped/icon)
+  - **Flexible blocks** (personal events): Draggable and resizable from top and bottom edges
 - Show overlap warnings visually but don't prevent overlaps
+- Display fixed blocks only if `is_hidden = false`
+- Clicking empty slot creates new flexible block
+- Clicking fixed block opens info modal (no edit options for time)
+- Clicking flexible block opens edit modal (can change time, title, etc.)
+
+### When Building PDF Upload & Parsing
+- **Priority**: This is the PRIMARY feature—implement in Phase 1
+- PDF upload → Google Gemini API → parse JSON response → database
+- Extract: course name, section, day(s), time, location, instructor
+- Create "fixed" event type (is_fixed = true, is_hidden = false)
+- Store in separate `class_catalog` table for browsing
+- Display extracted classes in sidebar catalog with hide/unhide toggles
+
+### When Building Class Catalog
+- Separate view (sidebar or modal) showing all extracted classes
+- Each class has hide/unhide toggle (checkbox or eye icon)
+- Hidden classes: `is_hidden = true` (not displayed on calendar)
+- Unhidden classes: `is_hidden = false` (displayed on calendar)
+- Search/filter by course code, time, department
+- Visual count: "Showing 5 of 12 classes"
+
+### When Building Calendar View
+- Display two block types with visual distinction:
+  - **Fixed blocks** (PDF classes): Locked position, striped pattern or lock icon
+  - **Flexible blocks** (personal events): Solid fill, draggable
+- Only flexible blocks can be dragged/resized
+- Fixed blocks display course code, time, location on hover/click
+- Overlap warnings shown as red outline
 
 ### When Building Import/Export
-- Import = one-time snapshot (events become local copies)
-- Export = compare and merge (detect duplicates by comparing title + time + duration)
+- **Import** (for context): One-time copy from Google/Outlook/Apple to see existing commitments
+  - Imported events become "flexible" blocks (can be moved)
+  - Use case: See work schedule or existing commitments alongside new classes
+- **Export** (finalization): Send schedule to Google/Outlook/Apple Calendar
+  - **Maintained connection** (NOT one-time): User can return, edit, re-export
+  - Store export metadata: which calendar, when exported, event IDs
+  - Duplicate detection: Compare title + time + duration
+  - Only export visible (unhidden) classes and all personal events
+  - Delete hidden classes from database on export (they chose not to include them)
 - Support iCalendar format for all three calendar providers
 
 ### When Implementing Sharing

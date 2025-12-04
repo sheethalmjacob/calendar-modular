@@ -1,11 +1,29 @@
 # Technical Decisions & Specifications
 
+## Product Positioning
+
+**Calendar Modular is a schedule planning tool for college students**, not a traditional calendar app. The core workflow is:
+
+1. Upload PDF class schedule
+2. AI extracts class options as visual blocks
+3. Experiment with different schedule combinations
+4. Export finalized schedule to real calendar
+
+**Key Differentiators:**
+- **PDF-first**: Class schedules uploaded as PDFs, not manually entered
+- **Planning sandbox**: Experiment before committing to external calendar
+- **Fixed + flexible blocks**: Classes locked at set times, personal events draggable
+- **Maintained connection**: Can return and make changes, then re-export
+
 ## Tech Stack
 
 ### Frontend
-- **Framework:** Modern interactive framework (React or similar)
+- **Framework:** React + TypeScript
+- **Build Tool:** Vite
 - **Default View:** Week view (with user-customizable preferences for day/week/month)
-- **Hosting:** Vercel or Netlify (free tier)
+- **Hosting:** Vercel (free tier)
+- **UI Library:** Shadcn/ui (modern, customizable components)
+- **Styling:** Tailwind CSS
 
 ### Backend & Infrastructure
 - **Backend Service:** Supabase
@@ -19,46 +37,116 @@
   - Social logins (Google, Microsoft, Apple)
 
 ### Third-Party Integrations
-- **Calendar Services:** All three from the beginning
+- **PDF Parsing:** Google Gemini (free tier) - **PRIMARY FEATURE**
+- **Calendar Services:** All three for import/export
   - Google Calendar
   - Microsoft Outlook
   - Apple Calendar
-- **PDF Parsing:** Google Gemini (free tier)
 
 ## Feature Specifications
 
-### Calendar Import/Export Behavior
-- **Import:** One-time copy of events (not synced)
-- **Export:** Smart merge (only add new/changed events, avoid duplicates)
-- **User Choice:** Users can save back to Google Calendar or keep in the tool
+### PDF Upload & Class Extraction (PRIMARY FEATURE)
+- **Upload Target:** College/university class schedule PDFs
+- **Parsing Engine:** Google Gemini (free tier)
+- **Extraction Logic:**
+  - Course name/code (e.g., "CS 101: Intro to Programming")
+  - Section number (e.g., "Section A", "Lab 02")
+  - Day(s) of week (e.g., "MWF", "TR")
+  - Time range (e.g., "9:00 AM - 10:15 AM")
+  - Location/room (e.g., "Building A, Room 205")
+  - Instructor name (optional)
+- **Output:** Structured JSON → database records → visual calendar blocks
+- **Future Expansion:** Support other schedule types (work shifts, conference agendas)
 
-### Privacy & Sharing
+### Class Catalog Management
+- **Catalog View:** Sidebar or modal showing all extracted classes
+- **Search/Filter:** By course code, department, time, instructor
+- **Hide/Unhide Mechanism:**
+  - Hidden classes removed from calendar view
+  - Still available in catalog to re-add
+  - Marked with "hidden" status in database
+- **Finalization:** When user exports, hidden classes are permanently deleted
+- **Block Type:** All PDF-imported classes are "fixed" (cannot be dragged to different times)
+
+### Event Types & Behavior
+
+#### Fixed Blocks (PDF-Imported Classes)
+- **Cannot be moved** to different times (locked by university)
+- **Can be hidden** from view via class catalog
+- **Visual indicator:** Distinct styling (e.g., striped pattern, lock icon)
+- **Color coding:** By department or user-defined category
+- **Metadata:** Course code, section, instructor, location displayed on hover/click
+
+#### Flexible Blocks (Personal Events)
+- **Fully draggable** to any time slot
+- **Resizable** from top and bottom edges
+- **Created manually** by user (study time, work, gym, meals, etc.)
+- **Overlap allowed** with visual warnings
+- **No fixed status** - user has full control
+
+### Calendar Import/Export Behavior
+
+#### Import (for context)
+- **Purpose:** See existing commitments alongside new class options
+- **Sources:** Google Calendar, Outlook, Apple Calendar
+- **Behavior:** One-time copy (not synced)
+- **Block Type:** Imported events become "flexible" (can be moved)
+- **Use Case:** Students import existing work schedule, club meetings, etc.
+
+#### Export (finalization)
+- **Destination:** Google Calendar, Outlook, Apple Calendar
+- **Connection Type:** Maintained (NOT one-time)
+- **Re-export:** User can return to planning canvas, make changes, re-export
+- **Conflict Detection:** Warn before overwriting existing events
+- **What Gets Exported:**
+  - Visible (unhidden) classes from PDF
+  - All personal events
+  - NOT hidden classes (those are deleted on finalization)
+- **Duplicate Prevention:** Compare by title + time + duration
+
+### Schedule Planning Canvas
+- **Mode:** Single working canvas (not multiple draft schedules)
+- **Experimentation:** Hide/unhide classes, move personal events until satisfied
+- **Undo/Redo:** Support for reverting changes
+- **Auto-save:** Changes saved to database automatically
+- **Overlap Warnings:** Visual indicators when events conflict
+  - Red outline for overlapping blocks
+  - Warning modal before finalizing schedule
+  - User can override (has final decision)
+
+### Privacy & Sharing (Phase 2)
 - **Shared Calendar View:** Busy/free time blocks only (no event details visible)
 - **Calendar Overlay Methods:** Both available
   - Request-based (approval required)
   - Sharing link (generated by calendar owner)
 
-### Scheduling Features
+### Scheduling Features (Phase 2)
 - **Scheduling Links:** Pre-defined time slots only (user sets availability windows)
 - **Booking Behavior:** Pending requests (user can accept or decline)
 - **Time Suggestions:** 
   - Visual highlights of free slots
   - Smart suggestions based on user patterns
 
-### Multi-Person Scheduling
+### Multi-Person Scheduling (Phase 2)
 - **Availability Display:** Show all time slots with visual indicators of how many people are available
-
-### Event Management
-- **Required Fields:** Title, time, duration
-- **Optional Fields:** Description, location, attendees
-- **Recurring Events:** Basic patterns (daily, weekly, monthly)
-- **Time Zones:** Start with local time zone only, add multi-zone support later
+- **Use Case:** Finding common free time for study groups or group projects
 
 ### UI/UX Interactions
-- **Time Block Resizing:** Snap to 15-minute increments
-- **Drag & Drop:** Allow overlap with visual warnings
-- **Conflict Handling:** Show warning but allow user to decide
-- **Event Organization:** Color coding with preset categories (work, personal, meetings, etc.)
+- **Time Block Resizing:** Snap to 15-minute increments (for flexible blocks only)
+- **Drag & Drop:** 
+  - Fixed blocks: Cannot be dragged
+  - Flexible blocks: Draggable anywhere
+- **Conflict Handling:** 
+  - Warn about overlaps
+  - Don't prevent them (user decides)
+  - Show count of conflicts before export
+- **Event Organization:** Color coding
+  - By department (for classes)
+  - By category (for personal events: work, study, gym, etc.)
+- **Class Catalog UI:**
+  - Searchable sidebar or drawer
+  - Toggle visibility with checkbox or eye icon
+  - Visual count of visible vs. total classes
 
 ### Notifications
 - **System:** In-app notifications only (browser notifications when using the tool)
@@ -69,25 +157,77 @@
 
 ## Implementation Phases
 
-### Phase 1 - Core Features
-- Basic calendar view (week view default)
-- Event creation with drag & drop
-- Import from Google/Outlook/Apple Calendar
-- Authentication (email/password + social logins)
+### Phase 1 - Core Schedule Planning (PDF-First)
+- **PDF Upload & Parsing** (PRIMARY FEATURE)
+  - File upload interface
+  - Google Gemini integration for AI extraction
+  - Parse class schedules into structured data
+  - Store extracted classes in database
+- **Class Catalog Browser**
+  - Sidebar/modal showing all extracted classes
+  - Search and filter functionality
+  - Hide/unhide toggle for each class
+  - Visual count of selected classes
+- **Basic Calendar View**
+  - Week view as default (switchable to day/month)
+  - Display fixed blocks (PDF classes) and flexible blocks (personal events)
+  - Visual distinction between fixed and flexible
+- **Event Manipulation**
+  - Create personal events (flexible blocks)
+  - Drag-and-drop for flexible blocks only
+  - Resize flexible blocks with 15-minute snapping
+  - Overlap warnings
+- **Calendar Import** (for context)
+  - Import from Google Calendar, Outlook, Apple Calendar
+  - One-time copy to see existing commitments
+- **Export Finalization**
+  - Export to Google/Outlook/Apple Calendar
+  - Maintain connection for future edits
+  - Duplicate detection and conflict warnings
+- **Authentication**
+  - Email/password + social logins
+  - User accounts to save schedules
 
-### Phase 2 - Collaboration
-- Scheduling links with pre-defined time slots
-- Calendar sharing (busy/free view)
-- Meeting request system
+### Phase 2 - Collaboration & Sharing
+- **Scheduling Links**
+  - Generate shareable links with pre-defined time slots
+  - Public booking page
+  - Pending request management
+- **Calendar Sharing**
+  - Busy/free view (no event details)
+  - Request-based overlay (approval required)
+  - Sharing link generation
+- **Multi-Person Scheduling**
+  - Overlay multiple calendars
+  - Find common free time
+  - Visual indicators of group availability
 
 ### Phase 3 - Advanced Features
-- PDF calendar parsing with Google Gemini
-- Multi-person calendar overlay
-- Smart time suggestions
-- Export to external calendars
+- **Smart Suggestions**
+  - AI-powered optimal schedule recommendations
+  - Analyze patterns (prefer mornings, avoid Fridays, etc.)
+  - Suggest class sections based on preferences
+- **Recurring Events**
+  - Weekly patterns for personal commitments
+  - Semester-long class schedules
+- **Enhanced PDF Parsing**
+  - Support more university schedule formats
+  - Extract prerequisite information
+  - Parse professor ratings (if available)
+- **Schedule Templates**
+  - Save favorite schedule layouts
+  - Quick-apply common personal event patterns
 
-### Phase 4 - Enhancements
-- Multi-timezone support
-- Advanced recurring patterns
-- Mobile responsiveness
-- Performance optimization
+### Phase 4 - Polish & Optimization
+- **Multi-timezone Support**
+  - For international students or online classes
+- **Mobile Responsiveness**
+  - Touch-friendly interface for tablets/phones
+- **Performance Optimization**
+  - Faster PDF parsing
+  - Lazy loading for large schedules
+- **Advanced Features**
+  - Waitlist tracking integration
+  - Course prerequisite validation
+  - GPA calculator integration
+  - Export to printable formats (PDF, image)
