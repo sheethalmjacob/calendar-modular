@@ -338,63 +338,205 @@ export function Calendar() {
   return (
     <div className="min-h-screen bg-[#F3F0E9] p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6 flex justify-between items-center">
-          <div>
-            <h1 className="text-5xl font-bold text-gray-900 mb-2">Class Schedule Manager</h1>
-            <p className="text-gray-600 text-base" style={{ color: '#646464', lineHeight: '1.5' }}>
-              {events.length} {events.length === 1 ? 'event' : 'events'} • {user?.email}
-            </p>
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h1 className="text-5xl font-bold text-gray-900 mb-2">Class Schedule Manager</h1>
+              <p className="text-base" style={{ color: '#646464', lineHeight: '1.5' }}>
+                {events.length} {events.length === 1 ? 'event' : 'events'} • {user?.email}
+              </p>
+            </div>
+            <Button variant="destructive" onClick={signOut}>
+              Sign Out
+            </Button>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => navigate('/upload')} className="bg-white border-gray-300">
-                Upload PDF
+          
+          {/* Primary Actions Row */}
+          <div className="flex flex-wrap items-center gap-4 mb-4">
+            {/* Upload PDF - Primary Action */}
+            <Button 
+              onClick={() => navigate('/upload')} 
+              className="bg-black text-white hover:bg-gray-800 border-0"
+              style={{ 
+                borderRadius: '999px', 
+                height: '48px',
+                paddingLeft: '24px',
+                paddingRight: '24px',
+                fontSize: '15px',
+                fontWeight: '500'
+              }}
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              Upload PDF Schedule
+            </Button>
+            
+            {/* Day/Week Toggle */}
+            <div className="flex" style={{ gap: '0' }}>
+              <Button
+                onClick={() => setView('day')}
+                variant="outline"
+                className={view === 'day' 
+                  ? 'bg-black text-white border-black hover:bg-gray-800 hover:text-white' 
+                  : 'bg-white text-black border-black hover:bg-gray-50'}
+                style={{
+                  borderRadius: '999px 0 0 999px',
+                  height: '48px',
+                  paddingLeft: '20px',
+                  paddingRight: '20px',
+                  borderRight: '0',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Day by Day
               </Button>
-              <Button variant="outline" onClick={() => navigate('/add-event')} className="bg-white border-gray-300">
-                Add Event
-              </Button>
-              <Button variant="outline" onClick={() => navigate('/manual')} className="bg-white border-gray-300">
-                Add Classes
-              </Button>
-              <Button variant="outline" onClick={() => navigate('/catalog')} className="bg-white border-gray-300">
-                Manage Classes
+              <Button
+                onClick={() => setView('week')}
+                variant="outline"
+                className={view === 'week' 
+                  ? 'bg-black text-white border-black hover:bg-gray-800 hover:text-white' 
+                  : 'bg-white text-black border-black hover:bg-gray-50'}
+                style={{
+                  borderRadius: '0 999px 999px 0',
+                  height: '48px',
+                  paddingLeft: '20px',
+                  paddingRight: '20px',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                Weekly View
               </Button>
             </div>
+          </div>
+          
+          {/* Secondary Actions Row */}
+          <div className="flex flex-wrap items-center" style={{ gap: '12px' }}>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/add-event')} 
+              className="bg-white border-gray-300 hover:bg-gray-50"
+              style={{ height: '44px' }}
+            >
+              Add Event
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/manual')} 
+              className="bg-white border-gray-300 hover:bg-gray-50"
+              style={{ height: '44px' }}
+            >
+              Add Classes
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/catalog')} 
+              className="bg-white border-gray-300 hover:bg-gray-50"
+              style={{ height: '44px' }}
+            >
+              Manage Classes
+            </Button>
             
-            <div className="flex gap-2 border-l pl-2 ml-2">
+            {/* Export Section */}
+            <div className="flex items-center" style={{ gap: '8px', marginLeft: '12px', paddingLeft: '12px', borderLeft: '1px solid #d1d5db' }}>
+              <span className="text-sm text-gray-600" style={{ marginRight: '4px' }}>Export:</span>
               <Button 
                 variant="outline" 
                 onClick={() => handleExport('google')} 
                 disabled={exporting || events.length === 0}
-                className="bg-white border-gray-300"
+                className="bg-white border-gray-300 hover:bg-gray-50"
+                style={{ height: '44px', fontSize: '13px' }}
               >
-                📅 Export to Google
+                📅 Google
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => handleExport('outlook')} 
                 disabled={exporting || events.length === 0}
-                className="bg-white border-gray-300"
+                className="bg-white border-gray-300 hover:bg-gray-50"
+                style={{ height: '44px', fontSize: '13px' }}
               >
-                📅 Export to Outlook
+                📅 Outlook
               </Button>
               <Button 
                 variant="outline" 
                 onClick={() => handleExport('apple')} 
                 disabled={exporting || events.length === 0}
-                className="bg-white border-gray-300"
+                className="bg-white border-gray-300 hover:bg-gray-50"
+                style={{ height: '44px', fontSize: '13px' }}
               >
-                📅 Export to Apple
+                📅 Apple
               </Button>
             </div>
-            
-            <Button variant="destructive" onClick={signOut}>
-              Sign Out
-            </Button>
           </div>
         </div>
+        
+        {/* Week Navigation */}
+        <div className="flex justify-between items-center mb-6">
+          <Button
+            variant="outline"
+            onClick={() => {
+              const newDate = new Date(date);
+              if (view === 'week') {
+                newDate.setDate(date.getDate() - 7);
+              } else {
+                newDate.setDate(date.getDate() - 1);
+              }
+              setDate(newDate);
+            }}
+            className="bg-white border-gray-300 hover:bg-gray-50"
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              padding: '0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </Button>
+          
+          <h2 className="text-xl font-semibold text-gray-900">
+            {format(date, view === 'week' ? 'MMMM yyyy' : 'EEEE, MMMM d, yyyy')}
+          </h2>
+          
+          <Button
+            variant="outline"
+            onClick={() => {
+              const newDate = new Date(date);
+              if (view === 'week') {
+                newDate.setDate(date.getDate() + 7);
+              } else {
+                newDate.setDate(date.getDate() + 1);
+              }
+              setDate(newDate);
+            }}
+            className="bg-white border-gray-300 hover:bg-gray-50"
+            style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              padding: '0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </Button>
+        </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6" style={{ height: '700px' }}>
+        {/* Calendar Container */}
+        <div className="bg-white border border-gray-300" style={{ borderRadius: '20px', padding: '24px', height: '700px' }}>
           <DragAndDropCalendar
             localizer={localizer}
             events={events}
@@ -421,7 +563,7 @@ export function Calendar() {
           />
         </div>
 
-        <div className="mt-6 p-5 bg-white rounded-xl border border-gray-200">
+        <div className="p-5 bg-white border border-gray-300" style={{ marginTop: '24px', borderRadius: '20px' }}>
           <h3 className="font-semibold text-gray-900 mb-3 text-sm">Event Types</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="flex items-center" style={{ gap: '8px' }}>
@@ -476,7 +618,7 @@ export function Calendar() {
           if (overlappingPairs.length === 0) return null;
 
           return (
-            <div className="mt-6 p-5 bg-red-50 rounded-xl border-2 border-red-200">
+            <div className="p-5 bg-red-50 border-2 border-red-200" style={{ marginTop: '24px', borderRadius: '20px' }}>
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-2xl">⚠️</span>
                 <h3 className="font-semibold text-red-900 text-sm">
